@@ -573,10 +573,9 @@ install_pterodactyl() {
     php artisan key:generate --force
     php artisan p:environment:setup -n --author=$email --url=https://$FQDN --timezone=America/New_York --cache=redis --session=database --queue=redis --redis-host=127.0.0.1 --redis-pass= --redis-port=6379
     php artisan p:environment:database --host=127.0.0.1 --port=3306 --database=panel --username=pterodactyl --password=$password
-    output "To use PHP's internal mail sending, select [mail]. To use a custom SMTP server, select [smtp]. TLS Encryption is recommended."
-    php artisan p:environment:mail
     php artisan migrate --seed --force
-    php artisan p:user:make --email=$email --admin=1
+    pteroadminpass=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+    php artisan p:user:make -n --email="$email" --username="admin" --name-first="Admin" --name-last="Admin" --password="$pteroadminpass" --admin=1
     if  [ "$lsb_dist" =  "ubuntu" ] || [ "$lsb_dist" =  "debian" ]; then
         chown -R www-data:www-data * /var/www/pterodactyl
     elif  [ "$lsb_dist" =  "fedora" ] || [ "$lsb_dist" =  "centos" ] || [ "$lsb_dist" =  "rhel" ]; then
@@ -1437,8 +1436,10 @@ broadcast(){
     elif [ "$lsb_dist" =  "fedora" ] || [ "$lsb_dist" =  "centos" ] && [ "$dist_version" != "8" ]; then
         output "Use 'firewall-cmd --permanent --add-port=<port>/tcp' to enable your desired ports."
     fi
+    
     output "###############################################################"
     output ""
+
 }
 
 broadcast_database(){
@@ -1454,6 +1455,13 @@ broadcast_database(){
         output "Password: $adminpassword"
         output "###############################################################"
         output ""
+	output "###############################################################"
+        output "PTERODACTYL LOGIN INFO"
+	output ""
+        output "User: admin"
+	output "Pass: $pteroadminpass"
+	output "###############################################################"
+	output ""
 }
 
 #Execution
